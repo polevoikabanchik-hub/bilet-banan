@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Билеты ПДД</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#f3f1ea;--card:#fff;--ink:#1d2327;--mute:#6b7378;--line:#d9d6cb;--accent:#1f5fbf;--ok:#1e8a4c;--bad:#c93b2f;--okbg:#e2f3e8;--badbg:#fbe5e2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15191c;--card:#1f2428;--ink:#eceae3;--mute:#98a1a7;--line:#343b40;--accent:#6aa3f5;--okbg:#17342367;--badbg:#3d1d1a99;--ok:#55c780;--bad:#f27b70}}
+:root[data-theme="dark"]{--bg:#15191c;--card:#1f2428;--ink:#eceae3;--mute:#98a1a7;--line:#343b40;--accent:#6aa3f5;--okbg:#17342367;--badbg:#3d1d1a99;--ok:#55c780;--bad:#f27b70}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--tg-theme-bg-color,var(--bg));color:var(--tg-theme-text-color,var(--ink));font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:8px 0 2px;letter-spacing:-.02em}
+.sub{color:var(--tg-theme-hint-color,var(--mute));margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.t{background:var(--tg-theme-secondary-bg-color,var(--card));border:1px solid var(--line);border-radius:12px;padding:14px;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.t b{display:block;font-size:18px}
+.t span{font-size:13px;color:var(--tg-theme-hint-color,var(--mute))}
+.t.done{border-color:var(--ok)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:6px 0 16px}
+.bar i{display:block;height:100%;background:var(--tg-theme-button-color,var(--accent));transition:width .25s}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--tg-theme-hint-color,var(--mute));font-size:14px}
+.back{background:none;border:0;color:var(--tg-theme-link-color,var(--accent));font:inherit;cursor:pointer;padding:4px 0}
+.q{font-size:19px;font-weight:600;margin:0 0 14px}
+.o{display:block;width:100%;text-align:left;background:var(--tg-theme-secondary-bg-color,var(--card));border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;color:inherit;font:inherit;cursor:pointer}
+.o.ok{border-color:var(--ok);background:var(--okbg)}
+.o.bad{border-color:var(--bad);background:var(--badbg)}
+.o:disabled{cursor:default}
+.ex{margin:12px 0;padding:12px 14px;border-left:4px solid var(--tg-theme-button-color,var(--accent));background:var(--tg-theme-secondary-bg-color,var(--card));border-radius:0 10px 10px 0;font-size:15px}
+.btn{display:block;width:100%;padding:14px;border:0;border-radius:12px;background:var(--tg-theme-button-color,var(--accent));color:var(--tg-theme-button-text-color,#fff);font:600 16px inherit;font-family:inherit;cursor:pointer;margin-top:10px}
+.btn.alt{background:transparent;color:var(--tg-theme-link-color,var(--accent));border:1.5px solid var(--line)}
+.score{font-size:56px;font-weight:700;letter-spacing:-.03em;margin:6px 0}
+.err{padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.err small{color:var(--tg-theme-hint-color,var(--mute));display:block}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+// Вопросы: [текст, [варианты], индекс верного, пояснение]. Добавляйте свои билеты сюда.
+const TICKETS=[
+[["Что означает сплошная линия разметки 1.1?",["Обозначает край проезжей части","Разделяет встречные потоки; пересекать её запрещено","Разрешает обгон","Обозначает место стоянки"],1,"Линия 1.1 разделяет транспортные потоки противоположных направлений, пересекать её запрещено."],
+["Какую скорость вне населённых пунктов разрешено развивать легковому автомобилю на обычных дорогах?",["Не более 70 км/ч","Не более 90 км/ч","Не более 110 км/ч","Не более 130 км/ч"],1,"Вне населённых пунктов легковым — до 90 км/ч, на автомагистралях — до 110 км/ч."],
+["Как поступить перед знаком «Движение без остановки запрещено» (STOP)?",["Снизить скорость и проехать, если нет помех","Остановиться перед стоп-линией, а при её отсутствии — перед пересекаемой проезжей частью","Остановиться только при наличии пешеходов","Проехать, подав звуковой сигнал"],1,"Остановка обязательна в любом случае, даже если помех нет."],
+["С какого возраста можно управлять легковым автомобилем категории B?",["С 16 лет","С 17 лет","С 18 лет","С 21 года"],2,"Для категории B минимальный возраст — 18 лет."],
+["Кто обязан быть пристёгнут ремнём безопасности в легковом автомобиле?",["Только водитель","Водитель и пассажир на переднем сиденье","Водитель и все пассажиры","Только при движении по трассе"],2,"Водитель и пассажиры легкового автомобиля, оборудованного ремнями, обязаны быть пристёгнуты."]],
+[["Что означает мигающий зелёный сигнал светофора?",["Движение запрещено","Движение разрешено, но скоро включится запрещающий сигнал","Требуется остановиться","Можно ехать только прямо"],1,"Мигающий зелёный разрешает движение и предупреждает о смене сигнала."],
+["Какая минимальная остаточная глубина протектора допускается у летних шин легкового автомобиля?",["0,8 мм","1,0 мм","1,6 мм","2,5 мм"],2,"Для легковых автомобилей минимум — 1,6 мм."],
+["На каком расстоянии от ближайшего рельса запрещена остановка у железнодорожного переезда?",["Ближе 5 м","Ближе 10 м","Ближе 15 м","Ближе 20 м"],0,"Остановка и стоянка запрещены ближе 5 метров до ближайшего рельса."],
+["Где запрещены остановка и стоянка рядом с пешеходным переходом?",["Только на самом переходе","На переходе и ближе 5 м перед ним","Только за 10 м после него","Остановка разрешена везде"],1,"Запрещено на пешеходных переходах и ближе 5 метров перед ними."],
+["Когда при движении обязательно включать ближний свет фар или ДХО?",["Только в темноте","Только в тоннеле","В любое время суток","Только в дождь"],2,"Ближний свет или дневные ходовые огни включают в любое время суток при движении."]],
+[["Когда подаётся сигнал указателем поворота?",["Только при повороте","Перед началом движения, перестроением, поворотом, разворотом и остановкой","Только при обгоне","Только в населённом пункте"],1,"Сигнал подают заблаговременно перед любым манёвром."],
+["На каком минимальном расстоянии от автомобиля вне населённого пункта выставляется знак аварийной остановки?",["10 м","15 м","20 м","30 м"],3,"В населённых пунктах — не менее 15 м, вне населённых пунктов — не менее 30 м."],
+["Где запрещён обгон?",["На пешеходных переходах","На прямом участке при хорошей видимости","На дороге с широкой обочиной","На любой многополосной дороге"],0,"Обгон запрещён на пешеходных переходах, перекрёстках и в других опасных местах."],
+["Разрешено ли управлять автомобилем после употребления алкоголя?",["Разрешено при небольшой дозе","Разрешено, если ехать недалеко","Запрещено","Разрешено при наличии опыта"],2,"Управлять транспортным средством в состоянии опьянения запрещено."],
+["Что означает знак с белым ромбом в жёлтой окантовке?",["Дорога с односторонним движением","Главная дорога","Уступи дорогу","Конец населённого пункта"],1,"Знак «Главная дорога» даёт преимущество на перекрёстках."]]
+];
+const tg=window.Telegram&&window.Telegram.WebApp;
+if(tg){try{tg.ready();tg.expand()}catch(e){}}
+const buzz=t=>{try{tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred(t)}catch(e){}};
+let best={};try{best=JSON.parse(localStorage.getItem("pdd_best")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("pdd_best",JSON.stringify(best))}catch(e){}};
+const app=document.getElementById("app");
+let S={t:0,i:0,picked:null,wrong:[],score:0};
+function home(){
+ const user=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user;
+ app.innerHTML=`<h1>Билеты ПДД</h1><p class="sub">${user?user.first_name+", выберите билет":"Выберите билет"}. Ответ показывается сразу, с пояснением.</p><div class="grid">`+
+ TICKETS.map((t,k)=>`<button class="t ${best[k]===t.length?"done":""}" data-k="${k}"><b>Билет ${k+1}</b><span>${best[k]!=null?"Лучший: "+best[k]+"/"+t.length:t.length+" вопросов"}</span></button>`).join("")+`</div>`;
+ app.querySelectorAll(".t").forEach(b=>b.onclick=()=>start(+b.dataset.k));
+}
+function start(k){S={t:k,i:0,picked:null,wrong:[],score:0};quiz()}
+function quiz(){
+ const T=TICKETS[S.t],[q,o,a,e]=T[S.i],done=S.picked!==null;
+ app.innerHTML=`<div class="top"><button class="back" id="bk">‹ Билеты</button><span>Билет ${S.t+1} · ${S.i+1} из ${T.length}</span></div>
+ <div class="bar"><i style="width:${S.i/T.length*100}%"></i></div><p class="q">${q}</p>`+
+ o.map((x,j)=>`<button class="o ${done?(j===a?"ok":j===S.picked?"bad":""):""}" data-j="${j}" ${done?"disabled":""}>${x}</button>`).join("")+
+ (done?`<div class="ex"><b>${S.picked===a?"Верно.":"Неверно."}</b> ${e}</div><button class="btn" id="nx">${S.i+1<T.length?"Следующий вопрос":"Показать результат"}</button>`:"");
+ document.getElementById("bk").onclick=home;
+ app.querySelectorAll(".o").forEach(b=>b.onclick=()=>{const j=+b.dataset.j;S.picked=j;
+  if(j===a){S.score++;buzz("success")}else{S.wrong.push({q,right:o[a],mine:o[j],e});buzz("error")}quiz()});
+ const n=document.getElementById("nx");if(n)n.onclick=()=>{S.picked=null;S.i++;S.i<T.length?quiz():result()};
+}
+function result(){
+ const T=TICKETS[S.t];if(best[S.t]==null||S.score>best[S.t]){best[S.t]=S.score;save()}
+ app.innerHTML=`<div class="top"><button class="back" id="bk">‹ Билеты</button></div><div class="score">${S.score}/${T.length}</div>
+ <p class="sub">${S.wrong.length?"Ошибок: "+S.wrong.length+". Разберите их ниже.":"Без ошибок. Билет сдан."}</p>`+
+ S.wrong.map(w=>`<div class="err"><b>${w.q}</b><small>Ваш ответ: ${w.mine}</small>Верно: ${w.right}<small>${w.e}</small></div>`).join("")+
+ `<button class="btn" id="rs">Пройти ещё раз</button><button class="btn alt" id="hm">К списку билетов</button>`;
+ document.getElementById("bk").onclick=home;document.getElementById("hm").onclick=home;
+ document.getElementById("rs").onclick=()=>start(S.t);
+}
+home();
+</script>
+</body>
+</html>
